@@ -21,5 +21,8 @@
 - Created a view to receive user input
 - Successfully made OpenAI GPT calls from Django backend and have chatgpt responses to user input 
 
+### 3. Langchain Integration 
+-turning fies into chunks of 1000 with overlap of 150 
+
 ##  In progress
 - currently learning how to vectorize the uploaded docs and store them in DB 
