@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .key import keychatgpt
+
 
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
