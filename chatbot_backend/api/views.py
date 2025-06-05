@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import DocumentSerializer
 
-class FileUploadView(APIView):
+class FileUploadView(APIView): 
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, format=None):
@@ -44,7 +44,7 @@ ENDPOINT = "https://models.github.ai/inference"
 MODEL = "openai/gpt-4.1"
 TOKEN = keychatgpt 
 if not TOKEN:
-    raise RuntimeError("GITHUB_TOKEN environment variable not set")
+    raise RuntimeError(" environment variable not set")
 
 client = ChatCompletionsClient(
     endpoint=ENDPOINT,
@@ -64,15 +64,15 @@ def chat_gpt(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-    user_message = data.get('message')
-    if not user_message:
+    userMessage = data.get('message')
+    if not userMessage:
         return JsonResponse({'error': 'No message provided'}, status=400)
 
     try:
         response = client.complete(
             messages=[
-                SystemMessage("You are a helpful assistant."),
-                UserMessage(user_message),
+                SystemMessage("test msg"),
+                UserMessage(userMessage),
             ],
             temperature=1,
             top_p=1,
