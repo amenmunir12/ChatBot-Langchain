@@ -26,8 +26,8 @@ class FileUploadView(APIView):
                 file_path = document.file.path
                 chunks = process_document_with_langchain(file_path)
 
-            # OPTIONAL: Store chunks into DB or Vector Store (next step)
-                print("Total Chunks:", len(chunks))  # Debugging output
+         
+                print("Total Chunks:", len(chunks))
 
             return Response(DocumentSerializer(document).data, status=status.HTTP_201_CREATED)
         else:
