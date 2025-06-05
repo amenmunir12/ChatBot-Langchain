@@ -52,7 +52,7 @@ from azure.core.credentials import AzureKeyCredential
 
 ENDPOINT = "https://models.github.ai/inference"
 MODEL = "openai/gpt-4.1"
-TOKEN = "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"
+TOKEN = ""
 if not TOKEN:
     raise RuntimeError(" environment variable not set")
 
