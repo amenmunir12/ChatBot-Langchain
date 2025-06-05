@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-
-
+from .key import keychatgpt
+from .utils import process_document_with_langchain
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -20,9 +20,14 @@ class FileUploadView(APIView):
             uploaded_file = request.FILES.get('file')
             if uploaded_file:
                 document.filename = uploaded_file.name
-                document.content_type = uploaded_file.content_type  # FIXED ✅
+                document.content_type = uploaded_file.content_type  
                 document.file_size = uploaded_file.size
                 document.save()
+                file_path = document.file.path
+                chunks = process_document_with_langchain(file_path)
+
+            # OPTIONAL: Store chunks into DB or Vector Store (next step)
+                print("Total Chunks:", len(chunks))  # Debugging output
 
             return Response(DocumentSerializer(document).data, status=status.HTTP_201_CREATED)
         else:
@@ -52,6 +57,7 @@ from azure.core.credentials import AzureKeyCredential
 
 ENDPOINT = "https://models.github.ai/inference"
 MODEL = "openai/gpt-4.1"
+TOKEN = "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"
 if not TOKEN:
     raise RuntimeError(" environment variable not set")
 
