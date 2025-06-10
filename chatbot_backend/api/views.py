@@ -159,14 +159,14 @@ def ask_question(request):
 
 
         
-@csrf_exempt
-def chat_view(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        message = data.get('message', '')
-        response = f"Bot says: You said '{message}'"
-        return JsonResponse({'response': response})
-    return JsonResponse({'error': 'Only POST method allowed'}, status=400)
+# @csrf_exempt
+# def chat_view(request):
+#     if request.method == 'POST':
+#         data = json.loads(request.body)
+#         message = data.get('message', '')
+#         response = f"Bot says: You said '{message}'"
+#         return JsonResponse({'response': response})
+#     return JsonResponse({'error': 'Only POST method allowed'}, status=400)
 
 
 import os
@@ -180,7 +180,7 @@ from azure.core.credentials import AzureKeyCredential
 
 ENDPOINT = "https://models.github.ai/inference"
 MODEL = "openai/gpt-4.1"
-TOKEN = "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"
+TOKEN = "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"
 if not TOKEN:
     raise RuntimeError(" environment variable not set")
 
@@ -229,6 +229,76 @@ def chat_gpt(request):
 
 
 
+# this view has the error where it wont let me axessx the open ai gpt model qithput api key and my key stays beng out of quota 
+# i have this above fun written where i used github tokens to use the gpt model for free but i am having issues to use the same approcah ere 
+import os
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+from langchain.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+
+from chatbot_backend import settings 
+
+VECTOR_INDEX_PATH = os.path.join(settings.BASE_DIR, "vector_index")
+
+@csrf_exempt
+def chat_with_prompt_template(request):
+    if request.method == 'POST':
+        try:
+            body = json.loads(request.body)
+            user_query = body.get('message', '')
+            if not user_query:
+                return JsonResponse({'error': 'Query message is required'}, status=400)
+
+         
+            embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+            vectordb = FAISS.load_local(VECTOR_INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
 
 
+            
+            docs = vectordb.similarity_search(user_query, k=4)
+            context = "\n\n".join([doc.page_content for doc in docs])
+            print("Retrieved docs:", docs)
+            print("Context:", context)
+            
+
+
+
+            
+            template = """
+You are a helpful assistant. Use the following document excerpts to answer the user's question.
+If the answer is not in the provided content, say you don't know. Be concise and clear.
+
+Context:
+{context}
+
+Question: {question}
+Answer:
+"""
+
+            prompt = PromptTemplate(
+                input_variables=["context", "question"],
+                template=template,
+            )
+
+            
+            llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.5)
+            chain = LLMChain(llm=llm, prompt=prompt)
+
+            response = chain.run({
+                "context": context,
+                "question": user_query
+            })
+
+            return JsonResponse({'response': response})
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 

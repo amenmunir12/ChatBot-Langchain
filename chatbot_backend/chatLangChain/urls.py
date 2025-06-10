@@ -1,7 +1,7 @@
 
 from django.urls import path
-from .views import chaat_view
+from .views import chat_with_prompt_template
 
 urlpatterns = [
-    path('chat/', chaat_view, name='chat-api'),
+    path('chatai/', chat_with_prompt_template, name='chat-api'),
 ]
