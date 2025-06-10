@@ -20,189 +20,6 @@ from langchain_huggingface import HuggingFaceEmbeddings
 
 import os
 import tempfile
-# class FileUploadView(APIView):
-#     parser_classes = (MultiPartParser, FormParser)
-
-#     def post(self, request, format=None):
-#         serializer = DocumentSerializer(data=request.data)
-#         if serializer.is_valid():
-#             document = serializer.save()
-
-#             uploaded_file = request.FILES.get('file')
-#             if not uploaded_file:
-#                 return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-
-#             # Save file metadata
-#             document.filename = uploaded_file.name
-#             document.content_type = uploaded_file.content_type
-#             document.file_size = uploaded_file.size
-#             document.save()
-
-#             # Step 1: Save the file temporarily (or use in-memory processing)
-#             with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as temp_file:
-#                 for chunk in uploaded_file.chunks():
-#                     temp_file.write(chunk)
-#                 temp_file_path = temp_file.name 
-#             os.remove(temp_file_path)
-
-#             # Step 2: Load and split the document
-#             loader = self.get_loader(temp_file_path, uploaded_file.content_type)
-#             pages = loader.load()
-#             text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-#             chunks = text_splitter.split_documents(pages)
-
-#             # Step 3: Initialize Ollama embeddings (local, no API key)
-#             embeddings = OllamaEmbeddings(model="nomic-embed-text")  # Or "llama2"
-
-#             # Step 4: Store in ChromaDB (persistent local storage)
-#             chroma_db = Chroma.from_documents(
-#                 documents=chunks,
-#                 embedding=embeddings,
-#                 persist_directory=f"chroma_db/{document.id}"  # Unique path per document
-#             )
-#             chroma_db.persist()  # Ensure data is saved to disk
-
-#             # Cleanup (optional)
-#             os.remove(temp_file_path)
-
-#             return Response(DocumentSerializer(document).data, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# import tempfile
-# import os
-
-# class FileUploadView(APIView):
-#     parser_classes = (MultiPartParser, FormParser)
-
-#     def post(self, request, format=None):
-#         serializer = DocumentSerializer(data=request.data)
-#         if serializer.is_valid():
-#             document = serializer.save()
-
-#             uploaded_file = request.FILES.get('file')
-#             if not uploaded_file:
-#                 return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-
-#             # Save file metadata
-#             document.filename = uploaded_file.name
-#             document.content_type = uploaded_file.content_type
-#             document.file_size = uploaded_file.size
-#             document.save()
-
-#             # Save uploaded file to a temp file on disk
-#             suffix = os.path.splitext(uploaded_file.name)[1]
-#             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-#                 for chunk in uploaded_file.chunks():
-#                     temp_file.write(chunk)
-#                 temp_file_path = temp_file.name
-
-#             try:
-#                 # Load and split the document
-#                 loader = self.get_loader(temp_file_path, uploaded_file.content_type)
-#                 pages = loader.load()
-#                 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-#                 chunks = text_splitter.split_documents(pages)
-
-#                 # Embeddings and vector store
-#                 embeddings = HuggingFaceEmbeddings(
-#                 model_name="sentence-transformers/all-MiniLM-L6-v2",
-#                 model_kwargs={"device": "cpu"}
-#             )
-#                 chroma_db = Chroma.from_documents(
-#                     documents=chunks,
-#                     embedding=embeddings,
-#                     persist_directory="chroma_db"
-# )
-#                 chroma_db.persist()
-
-#                 return Response(DocumentSerializer(document).data, status=status.HTTP_201_CREATED)
-
-#             finally:
-#                 # Always clean up the temporary file
-#                 os.remove(temp_file_path)
-
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     def get_loader(self, file_path, content_type):
-#         """Helper to choose the right loader based on file type."""
-#         if content_type == "application/pdf":
-#             return PyPDFLoader(file_path)
-#         elif content_type == "text/plain":
-#             return TextLoader(file_path)
-#         elif content_type in [
-#             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-#             "application/msword",
-#         ]:
-#             return Docx2txtLoader(file_path)
-#         else:
-#             raise ValueError(f"Unsupported file type: {content_type}")
-
-# from django.http import JsonResponse
-# import traceback
-
-# class FileUploadView(APIView):
-#     parser_classes = (MultiPartParser, FormParser)
-
-#     def post(self, request, format=None):
-#         serializer = DocumentSerializer(data=request.data)
-#         if serializer.is_valid():
-#             document = serializer.save()
-
-#             uploaded_file = request.FILES.get('file')
-#             if uploaded_file:
-#                 document.filename = uploaded_file.name
-#                 document.content_type = uploaded_file.content_type
-#                 document.file_size = uploaded_file.size
-#                 document.save()
-
-#                 file_path = document.file.path
-
-#                 try:
-#                     # === Load PDF ===
-#                     loader = PyPDFLoader(file_path)
-#                     docs = loader.load()
-
-#                     # === Split Text ===
-#                     text_splitter = RecursiveCharacterTextSplitter(
-#                         chunk_size=1500,
-#                         chunk_overlap=150
-#                     )
-#                     splits = text_splitter.split_documents(docs)
-
-#                     # === Embedding and Vectorstore ===
-                    
-#                     embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-
-#                     persist_directory = os.path.join('docs', 'chroma')
-
-#                     vectordb = Chroma.from_documents(
-#                         documents=splits,
-#                         embedding=embedding,
-#                         persist_directory=persist_directory
-#                     )
-#                     vectordb.persist()
-
-#                     print("Uploaded file:", uploaded_file.name)
-#                     print("Total Chunks:", len(splits))
-#                     print("Total vectors in DB:", vectordb._collection.count())
-
-#                 except Exception as e:
-#                     traceback_str = traceback.format_exc()
-#                     print("Error processing PDF:", traceback_str)
-#                     return JsonResponse({'error': 'Error processing PDF', 'details': str(e)}, status=500)
-
-#             return Response(DocumentSerializer(document).data, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-# views.py
 
 import os
 from django.conf import settings
@@ -222,40 +39,82 @@ import json
 
 VECTOR_INDEX_PATH = os.path.join(settings.BASE_DIR, "vector_index")
 
+# @csrf_exempt
+# def upload_file(request):
+#     if request.method == 'POST':
+#         print("Request content-type:", request.content_type)
+#         print("request.FILES keys:", request.FILES.keys())
+#         print("request.POST keys:", request.POST.keys())
+
+#         file = request.FILES.get('file')
+#         if not file:
+#             return JsonResponse({'error': 'No file provided'}, status=400)
+
+   
+#         temp_path = default_storage.save('temp/' + file.name, ContentFile(file.read()))
+#         temp_full_path = os.path.join(settings.MEDIA_ROOT, temp_path)
+
+     
+#         loader = TextLoader(temp_full_path)
+#         documents = loader.load()
+
+#         splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+#         docs = splitter.split_documents(documents)
+
+#         embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+#         vectordb = FAISS.from_documents(docs, embeddings)
+
+   
+#         vectordb.save_local(VECTOR_INDEX_PATH)
+
+#         return JsonResponse({'message': 'File processed and vectorized successfully'})
+#     else:
+#         return JsonResponse({'error': 'Invalid method'}, status=405)
+
+
+
+from .models import DocumentChunk
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.document_loaders import TextLoader
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
+from django.conf import settings
+
 @csrf_exempt
 def upload_file(request):
     if request.method == 'POST':
-        print("Request content-type:", request.content_type)
-        print("request.FILES keys:", request.FILES.keys())
-        print("request.POST keys:", request.POST.keys())
-
         file = request.FILES.get('file')
         if not file:
             return JsonResponse({'error': 'No file provided'}, status=400)
 
-   
+     
         temp_path = default_storage.save('temp/' + file.name, ContentFile(file.read()))
         temp_full_path = os.path.join(settings.MEDIA_ROOT, temp_path)
 
-     
         loader = TextLoader(temp_full_path)
         documents = loader.load()
-
         splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         docs = splitter.split_documents(documents)
 
-        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        vectordb = FAISS.from_documents(docs, embeddings)
+        
+        embeddings_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        for doc in docs:
+            embedding = embeddings_model.embed_query(doc.page_content)
 
-   
-        vectordb.save_local(VECTOR_INDEX_PATH)
+            chunk = DocumentChunk(
+                chunk_text=doc.page_content,
+                source_file=file.name
+            )
+            chunk.set_embedding(embedding)
+            chunk.save()
 
-        return JsonResponse({'message': 'File processed and vectorized successfully'})
+        return JsonResponse({'message': 'Chunks stored in SQLite DB successfully'})
     else:
         return JsonResponse({'error': 'Invalid method'}, status=405)
-
-
-
 
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
