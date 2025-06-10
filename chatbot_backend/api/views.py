@@ -219,7 +219,7 @@ from langchain.vectorstores import FAISS
 import tempfile
 import json
 
-# Path to persist your vector index (could also use PostgreSQL or Chroma)
+
 VECTOR_INDEX_PATH = os.path.join(settings.BASE_DIR, "vector_index")
 
 @csrf_exempt
@@ -233,11 +233,11 @@ def upload_file(request):
         if not file:
             return JsonResponse({'error': 'No file provided'}, status=400)
 
-        # Save file temporarily
+   
         temp_path = default_storage.save('temp/' + file.name, ContentFile(file.read()))
         temp_full_path = os.path.join(settings.MEDIA_ROOT, temp_path)
 
-        # Load, chunk and embed
+     
         loader = TextLoader(temp_full_path)
         documents = loader.load()
 
@@ -247,7 +247,7 @@ def upload_file(request):
         embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         vectordb = FAISS.from_documents(docs, embeddings)
 
-        # Save to disk
+   
         vectordb.save_local(VECTOR_INDEX_PATH)
 
         return JsonResponse({'message': 'File processed and vectorized successfully'})
@@ -255,7 +255,7 @@ def upload_file(request):
         return JsonResponse({'error': 'Invalid method'}, status=405)
 
 
-# views.py (continued)
+
 
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
@@ -270,14 +270,14 @@ def ask_question(request):
             if not query:
                 return JsonResponse({'error': 'No query provided'}, status=400)
 
-            # Load Vector DB
+       
             embeddings = OpenAIEmbeddings()
             vectordb = FAISS.load_local(VECTOR_INDEX_PATH, embeddings)
 
-            # Retrieve matching documents
+           
             docs = vectordb.similarity_search(query)
 
-            # Answer using OpenAI and LangChain QA chain
+          
             llm = OpenAI(temperature=0)
             chain = load_qa_chain(llm, chain_type="stuff")
             response = chain.run(input_documents=docs, question=query)
