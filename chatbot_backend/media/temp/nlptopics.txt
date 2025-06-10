@@ -1,0 +1,80 @@
+embeddings
+onehot vector
+meaning as vector
+word embedding vectors
+word embedding process
+basic word embedding methods
+advanced word embedding methods
+continuous bag of words
+center word prediction
+transforming center words into vactor
+Architecture of CBOW model
+Dimension(single input)
+Dimensions (batch input)
+loss
+cross-entropy loss
+Forward propagation
+Gradient descent
+Sentiment Analysis
+Feature Extraction
+Solution of Sparsity
+Supervised ML
+Preprocessing Stop words and puncutation
+preprocessing: stemming nd lower casing
+ovweview of Logistic Regression
+Training LR
+Testing Logistic Regression
+Accuracy, precision , recall
+Formal Grammars of English
+What is a grammar
+grammar formalisms
+spcific grammar
+Basic sentence structure
+Words take arguments
+subcategorization
+A better FSA
+Language is recursive
+FSA
+Recursion can be complex
+What is structure of sentence?
+Two ways : 
+1. phase structure sentence
+2. Dependency tree
+Context free grammar (CFGs)
+CFGs and center embedding
+CFGs are equivalent to push down automata
+Adjunks are optional
+Aguments
+Noun phrases
+The NP fragment
+The adjective phrase and prepositional phrase
+capturing subcategorization
+The sentences refined
+CKY
+CKY chart parsing algorithm
+pressures a CFG in chomsky normal form
+chomsky normal form
+Neutral machine translation
+seq2seq model
+seq2seq encoder
+The information bottleneck
+seq2seq shortcommings
+use all encoder hidden state
+How to use all hidden state
+The attention layer in more depth
+Queries, keys and values
+dot product ttention
+alignment weights
+machine translation setup
+training seq2seq model
+NMT Model
+BLEU Score
+ROUGE
+ROUGE-N
+ROUGE-N, F1 scor and BLEU
+Types of question in modern system
+Paradigms of QA
+IR based Factoid QA
+
+
+
