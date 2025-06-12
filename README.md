@@ -92,6 +92,10 @@
 ## Screenshots 
 
 
-![chat response ](screenshot/chat.jpg)
+![chatui ](screenshot/chatui.jpg)
 
+![home ](screenshot/home.jpg)
 
+![upload ](screenshot/upload.jpg)
+
+![chat api](screenshot/chat.jpg)
