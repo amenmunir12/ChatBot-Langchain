@@ -125,22 +125,21 @@ from langchain.chains import LLMChain
 from langchain.llms.base import LLM
 from typing import Optional, List
 
-from chatbot_backend import settings 
+from chatbot_backend import settings
 
 VECTOR_INDEX_PATH = os.path.join(settings.BASE_DIR, "vector_index")
 
-
 class LocalLLM(LLM):
-    endpoint: str = "http://192.168.1.13:1234/v1/chat/completions"  
-    model_name: str = "opengpt-3"  
+    endpoint: str = "http://192.168.1.13:1234/v1/completions"
+    model_name: str = "opengpt-3"
     temperature: float = 0.7
 
-    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+    def _call(self, prompt: str, stop: Optional[List[str]] = None, system_prompt: Optional[str] = None) -> str:
         headers = {"Content-Type": "application/json"}
         payload = {
             "model": self.model_name,
             "messages": [
-                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "system", "content": system_prompt or "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
             ],
             "temperature": self.temperature,
@@ -151,10 +150,6 @@ class LocalLLM(LLM):
             response.raise_for_status()
             data = response.json()
 
-            # print("Raw LLM Response:", data) 
-            # print("Full LLM JSON:", json.dumps(data, indent=2))
-
-            
             if "choices" in data:
                 if "message" in data["choices"][0]:
                     return data["choices"][0]["message"]["content"].strip()
@@ -179,46 +174,80 @@ class LocalLLM(LLM):
         return "local_llm"
 
 
+
 @csrf_exempt
 def chatWithPromptTemplate(request):
     if request.method == 'POST':
         try:
             body = json.loads(request.body)
-            user_query = body.get('message', '')
+            user_query =body.get('message', '').strip()
+
             if not user_query:
                 return JsonResponse({'error': 'Query message is required'}, status=400)
 
+            
+            llm = LocalLLM()
+
+            greetings = ["hi", "hello", "hey", "how are you", "good morning", "good evening"]
+            if any(greet in user_query.lower() for greet in greetings):
+                response = llm._call(
+                    user_query,
+                    system_prompt="You are a friendly chatbot who answers in a warm and natural tone."
+                )
+                return JsonResponse({'response': response})
+
+            
             embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
             vectordb = FAISS.load_local(VECTOR_INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
+            docs = vectordb.similarity_search(user_query, k=8)
 
-            docs = vectordb.similarity_search(user_query, k=4)
-            context = "\n\n".join([doc.page_content for doc in docs])
-            print(f"context: {context}")  
+            print(" User query:", user_query)
+            print("Retrieved documents:", len(docs))
 
-            template = """
-You are a helpful assistant. Use the following document excerpts to answer the user's question.
-If the answer is not in the provided content, say you don't know. Be concise and clear.
+            if docs:
+              
+                from collections import defaultdict
+                file_chunks = defaultdict(list)
+                for doc in docs:
+                    file_chunks[doc.metadata.get("source", "unknown")].append(doc)
 
-Context:
-{context}
+                top_file = max(file_chunks, key=lambda k: len(file_chunks[k]))
+                docs = file_chunks[top_file]
 
-Question: {question}
-Answer:
-"""
+                file_name = top_file
+                print(f"📄 Using document: {file_name}")
 
-            prompt = PromptTemplate(
-                input_variables=["context", "question"],
-                template=template,
-            )
+                # Build the context prompt
+                context = "\n\n".join([doc.page_content for doc in docs])
+                context_prompt = f"""
+                You are an assistant that answers questions based only on the information provided in the document. Be concise and clear, and don repeat yourself.
 
-            llm = LocalLLM()
-            chain = LLMChain(llm=llm, prompt=prompt)
+                Document:
+                \"\"\"
+                {context}
+                \"\"\"
 
-            response = chain.run({
-                "context": context,
-                "question": user_query
-            })
+                Question:
+                {user_query}
 
+                Answer only using the content in the document above. If the answer is not there, reply with "I don't know".
+                """
+                print("Final Prompt Sent to Local LLM:\n", context_prompt)
+
+
+                
+                response = llm._call(context_prompt)
+            else:
+                fallback_prompt = f"""
+                The user asked: "{user_query}"
+
+                However, no document context is available to answer this question.
+                If a document was required, politely say you don't have access to it.
+                Only respond if it's a general question not dependent on a document.
+                """
+                response = llm._call(fallback_prompt)
+
+            print("Response:", response)
             return JsonResponse({'response': response})
 
         except Exception as e:
