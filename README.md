@@ -10,7 +10,7 @@
 - Ask questions about the uploaded file
 - Retrieve the most relevant chunks and generate responses using ChatGPT
 - Frontend chat interface in React
-
+- The api directory had the view and models for the project
 
 ## Backend 
 
